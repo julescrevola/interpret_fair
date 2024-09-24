@@ -1,6 +1,8 @@
 [tool.poetry]
 name = "interpret_fair"
 version = "0.1.0"
+description = "Project for Course 03-algorthmic-fairness-and-interpretability"
+authors = ["Antonio Roberto Ventura antonio.ventu@hotmail.it"]
 license = "MIT"
 
 [tool.poetry.dependencies]
