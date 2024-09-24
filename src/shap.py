@@ -3,11 +3,14 @@
 import shap
 import matplotlib.pyplot as plt
 import pandas as pd
-from typing import List, Literal
+from typing import Literal
 
 from sklearn.base import RegressorMixin, ClassifierMixin, BaseEstimator
 
-def draw_shap(model:RegressorMixin | ClassifierMixin | BaseEstimator, data:pd.DataFrame, type: Literal["bar"], model_name: str | None = None):
+
+def draw_shap(model: RegressorMixin | ClassifierMixin | BaseEstimator,
+              data: pd.DataFrame, type: Literal["bar"],
+              model_name: str | None = None):
     """Plot shap values"""
 
     if model_name is None:
@@ -23,14 +26,17 @@ def draw_shap(model:RegressorMixin | ClassifierMixin | BaseEstimator, data:pd.Da
     plt.show()
 
 
-def draw_shap_tree(model:RegressorMixin | ClassifierMixin | BaseEstimator, data:pd.DataFrame, model_name: str | None = None):
+def draw_shap_tree(model: RegressorMixin | ClassifierMixin | BaseEstimator,
+                   data: pd.DataFrame, model_name: str | None = None):
     """Plot shap tree for variables"""
     draw_shap(model=model,
               data=data,
               model_name=model_name,
               type="bar")
 
-def draw_shap_summary(model:RegressorMixin | ClassifierMixin | BaseEstimator, data:pd.DataFrame, model_name: str | None = None):
+
+def draw_shap_summary(model: RegressorMixin | ClassifierMixin | BaseEstimator,
+                      data: pd.DataFrame, model_name: str | None = None):
     """Plot shap summary for variables"""
     draw_shap(model=model,
               data=data,
