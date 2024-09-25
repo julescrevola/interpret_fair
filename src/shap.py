@@ -21,7 +21,7 @@ def draw_shap(model: RegressorMixin | ClassifierMixin | BaseEstimator,
 
     shap.summary_plot(shap_values, data, show=False, plot_type=type)
 
-    plt.savefig(f"variables_impact for {model_name}", dpi=200)
+    # plt.savefig(f"variables_impact for {model_name}", dpi=200)
 
     plt.show()
 
