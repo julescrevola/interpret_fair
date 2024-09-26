@@ -55,7 +55,7 @@ def xper_method(model, eval_metric, dataset: pd.DataFrame, X_train: pd.DataFrame
 
     # Option 1 - Kernel True (more than 10 variables)
     # Calculate XPER values for the model's performance
-    XPER_values = XPER_.calculate_XPER_values([eval_metric])
+    XPER_values = XPER_.calculate_XPER_values([eval_metric], execution_type="ProcessPoolExecutor")
 
     labels = list(X_train.columns)
 
