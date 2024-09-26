@@ -43,7 +43,7 @@ viz.force_plot(XPER_values=XPER_values, instance=1, X_test=X_test, variable_name
 def xper_method(model, eval_metric, dataset: pd.DataFrame, X_train: pd.DataFrame, y_train: pd.Series, X_test: pd.DataFrame, y_test: pd.Series):
     
     """
-    use XPER method to compute model performance and visualize outcome
+    Use XPER method to compute model performance and visualize outcome
     """
     
     # Evaluate the model performance using the specified metric(s)
@@ -67,8 +67,5 @@ def xper_method(model, eval_metric, dataset: pd.DataFrame, X_train: pd.DataFrame
 
     #force plot
     viz.force_plot(XPER_values=XPER_values, instance=1, X_test=X_test, variable_name=labels, figsize=(16,4))
-
-# Load the model
-model = joblib.load('cat_boost_model')
 
 
