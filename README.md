@@ -1,1 +1,1 @@
-# Interpretability and Algorithmic fairness
+# Interpretability and Algorithmic Fairness

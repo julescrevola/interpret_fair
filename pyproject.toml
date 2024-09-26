@@ -1,13 +1,13 @@
 [tool.poetry]
+package-mode = false
+authors = ["Jules Crevola", "jules.crevola@hec.edu", "Antonio Roberto Ventura", "antonio.ventu@hotmail.it", "Giacomo Lustri", "giacomo.lustri@hec.edu"]
 name = "interpret_fair"
 version = "0.1.0"
 description = "Project for Course 03-algorthmic-fairness-and-interpretability"
-authors = ["Antonio Roberto Ventura antonio.ventu@hotmail.it"]
 license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-shap = "^0.42.0"
 matplotlib = "^3.8.0"
 pandas = "^2.1.1"
 scikit-learn = "^1.3.0"
