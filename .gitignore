@@ -1,5 +1,0 @@
-.gitignore
-*.csv
-*.xlsx
-venv/
-*.pyc
