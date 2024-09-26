@@ -38,7 +38,7 @@ def xper_method(model, eval_metric, dataset: pd.DataFrame, X_train: pd.DataFrame
 
 #Permutation importance method
 from sklearn.inspection import permutation_importance
-scoring = ['r2']
+scoring = ['r2'] #more scoring metrics can be added
 r_multi = permutation_importance(
     model, X_train, y_train, n_repeats=30, random_state=0, scoring=scoring)
 
