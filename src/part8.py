@@ -36,3 +36,17 @@ def xper_method(model, eval_metric, dataset: pd.DataFrame, target_col: pd.Series
     viz.force_plot(XPER_values=XPER_values, instance=1, X_test=X_test, variable_name=labels, figsize=(16,4))
 
 
+#Permutation importance method
+from sklearn.inspection import permutation_importance
+scoring = ['r2'] #more scoring metrics can be added
+r_multi = permutation_importance(
+    model, X_train, y_train, n_repeats=30, random_state=0, scoring=scoring)
+
+for metric in r_multi:
+    print(f"{metric}")
+    r = r_multi[metric]
+    for i in r.importances_mean.argsort()[::-1]:
+        if r.importances_mean[i] - 2 * r.importances_std[i] > 0:
+            print(f"    {X_train.columns[i]:<8}"
+                  f"{r.importances_mean[i]:.3f}"
+                  f" +/- {r.importances_std[i]:.3f}")
