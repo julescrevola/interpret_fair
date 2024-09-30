@@ -62,10 +62,11 @@ def calculate_p_values(variable_to_test: pd.Series, outcome: pd.Series) -> Tuple
     return p_values, thresholds
 
 def draw_fpdp(variable_to_test: pd.Series, outcome: pd.Series):
-    """Draw FPDP graphs with the p-values of the statistical parity test."""
-    
-    # Calculate p-values for the grouped variable_to_test
-    p_values, thresholds = calculate_p_values(variable_to_test, outcome)
+    """Draw fpdp graphs"""
+    thresholds = np.unique(outcome)
+
+    # Calculate p-values for different thresholds
+    p_values = calculate_p_values(variable_to_test, outcome, thresholds)
 
     # Plotting
     plt.figure(figsize=(10, 6))
