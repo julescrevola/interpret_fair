@@ -32,7 +32,7 @@ def draw_shap_tree(model: RegressorMixin | ClassifierMixin | BaseEstimator,
     draw_shap(model=model,
               data=data,
               model_name=model_name,
-              type="bar")
+              type="dot")
 
 
 def draw_shap_summary(model: RegressorMixin | ClassifierMixin | BaseEstimator,
