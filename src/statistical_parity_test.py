@@ -22,22 +22,23 @@ def calculate_statistical_parity_p_value(group1_success, group1_total,
 
 
 def test_statistical_parity(df: pd.DataFrame,
-        binned_variable: pd.Series,
+        binned_variable_name: str,
+        binned_edges: np.array,
         group_variable: str, outcome_variable: str) -> float:
     """Test statistical parity by comparing each group to the rest."""
     p_values = []
+    df[binned_variable_name] = df[binned_variable_name].astype(int)
 
-    candidate_feature_values = binned_variable.sort_values().unique()
+    candidate_feature_values = binned_edges
     for i in range(len(candidate_feature_values) - 1):
-        bin_lower_bound = candidate_feature_values[i]
-        bin_upper_bound = candidate_feature_values[i + 1]
+        bin_lower_bound = int(candidate_feature_values[i])
+        bin_upper_bound = int(candidate_feature_values[i + 1])
 
-        bin_variable_name = binned_variable.name
-        data_in_bin = df.query(
-            "@bin_lower_bound <= @bin_variable_name < @bin_upper_bound"
-        )
 
-        outcome = df[outcome_variable]
+        data_in_bin = df[(df[f'{binned_variable_name}'] >= bin_lower_bound) & (df[f'{binned_variable_name}'] < bin_upper_bound)]
+
+
+        outcome = df.loc[data_in_bin.index, outcome_variable]
 
         group1_mask = (data_in_bin[group_variable] == 0)  # no default
         group2_mask = ~group1_mask
@@ -71,20 +72,28 @@ def calculate_p_values(variable_to_test: pd.Series,
                        ) -> Tuple[np.ndarray, np.ndarray]:
     """Calculate p-values for the binned or discrete values of the variable_to_test."""
     unique_values = variable_to_test.nunique()
+    binned_variable_name = variable_to_test.name
 
-    if unique_values > 10:
+    if True:
         # Bin the variable into 10 groups if there are more than
         # 10 unique values
         binned_variable, bin_edges = pd.qcut(
             variable_to_test, 10, retbins=True, labels=False, duplicates='drop')
         thresholds = bin_edges
+       #print(bin_edges)
     else:
         # If 10 or fewer unique values, use the unique values directly
         binned_variable = variable_to_test
+    
+        #print(binned_variable)
         thresholds = sorted(variable_to_test.unique())
 
     # Calculate p-values for each group
-    p_values = test_statistical_parity(binned_variable, group_variable, outcome_variable, df)
+    p_values = test_statistical_parity(df=df, 
+                                       binned_variable_name=binned_variable_name,
+                                       binned_edges = bin_edges, 
+                                       group_variable= group_variable, 
+                                       outcome_variable = outcome_variable)
 
     return p_values, thresholds
 
@@ -93,7 +102,10 @@ def draw_fpdp(variable_to_test: pd.Series, group_variable: str, outcome_variable
     """Draw FPDP graphs with the p-values of the statistical parity test."""
 
     # Calculate p-values for the grouped variable_to_test
-    p_values, thresholds = calculate_p_values(variable_to_test, group_variable, outcome_variable, df)
+    p_values, thresholds = calculate_p_values(df=df,
+                                              variable_to_test=variable_to_test, 
+                                              group_variable=group_variable, 
+                                              outcome_variable=outcome_variable)
 
     # Plotting
     plt.figure(figsize=(10, 6))
