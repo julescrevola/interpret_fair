@@ -1,50 +1,80 @@
-from scipy.stats import chi2_contingency
-import pandas as pd
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+from scipy.stats import chi2_contingency
 
-def test_statistical_parity(variable_to_test: pd.Series, outcome: pd.Series) -> float:
-    """Run statistical parity test, ensuring the contingency table is valid."""
-    contingency_table = pd.crosstab(variable_to_test, outcome)
+from typing import Tuple
 
-    # Ensure we have enough data in the contingency table
-    if contingency_table.min().min() < 5:
-        # If any cell has fewer than 5 observations, return NaN as the result is unreliable
-        return np.nan
+def calculate_statistical_parity_p_value(group1_success, group1_total, group2_success, group2_total):
+    """Calculate the p-value for statistical parity between group1 and group2."""
+    # Create a contingency table
+    contingency_table = np.array([[group1_success, group1_total - group1_success],
+                                  [group2_success, group2_total - group2_success]])
     
-    # Calculate the chi-squared statistic and p-value
-    chi2, p, _, _ = chi2_contingency(contingency_table)
+    # Perform the chi-squared test
+    chi2, p_value, _, _ = chi2_contingency(contingency_table, correction=False)
+    
+    return p_value
 
-    return p
-
-def calculate_p_values(variable_to_test: pd.Series, outcome: pd.Series, bin_edges: np.ndarray) -> np.ndarray:
-    """Calculate p-values for different variable thresholds based on bin ranges."""
+def test_statistical_parity(binned_variable: pd.Series, outcome: pd.Series) -> float:
+    """Test statistical parity by comparing each group to the rest."""
     p_values = []
-    for threshold in bin_edges:
-        # Bin the variable_to_test based on the threshold
-        binned_variable = (variable_to_test >= threshold).astype(int)
 
-        # Calculate the p-value for the statistical parity test
-        p = test_statistical_parity(binned_variable, outcome)
-        p_values.append(p)
+    # Loop over each unique group in the binned variable
+    for group in binned_variable.unique():
+        group1_mask = (binned_variable == group)
+        group2_mask = ~group1_mask
+        
+        # Group 1: The group being tested
+        group1_total = group1_mask.sum()
+        group1_success = outcome[group1_mask].sum()
+
+        # Group 2: All other groups combined
+        group2_total = group2_mask.sum()
+        group2_success = outcome[group2_mask].sum()
+
+        if group1_total < 5 or group2_total < 5:
+            # If there are not enough observations, the result is unreliable
+            p_values.append(np.nan)
+        else:
+            # Calculate the p-value for statistical parity
+            p_value = calculate_statistical_parity_p_value(group1_success, group1_total, group2_success, group2_total)
+            p_values.append(p_value)
+
     return np.array(p_values)
+
+def calculate_p_values(variable_to_test: pd.Series, outcome: pd.Series) -> Tuple[np.ndarray, np.ndarray]:
+    """Calculate p-values for the binned or discrete values of the variable_to_test."""
+    unique_values = variable_to_test.nunique()
+
+    if unique_values > 10:
+        # Bin the variable into 10 groups if there are more than 10 unique values
+        binned_variable, bin_edges = pd.qcut(variable_to_test, 10, retbins=True, labels=False, duplicates='drop')
+        thresholds = bin_edges
+    else:
+        # If 10 or fewer unique values, use the unique values directly
+        binned_variable = variable_to_test
+        thresholds = sorted(variable_to_test.unique())
+
+    # Calculate p-values for each group
+    p_values = test_statistical_parity(binned_variable, outcome)
+
+    return p_values, thresholds
 
 def draw_fpdp(variable_to_test: pd.Series, outcome: pd.Series):
     """Draw FPDP graphs with the p-values of the statistical parity test."""
-    # Bin the variable_to_test into 10 ranges (for continuous variables)
-    _, bin_edges = pd.qcut(variable_to_test, 10, retbins=True, duplicates='drop')
-
-    # Calculate p-values for each threshold (bin edge) on the variable_to_test
-    p_values = calculate_p_values(variable_to_test, outcome, bin_edges)
+    
+    # Calculate p-values for the grouped variable_to_test
+    p_values, thresholds = calculate_p_values(variable_to_test, outcome)
 
     # Plotting
     plt.figure(figsize=(10, 6))
-    plt.plot(bin_edges, p_values, marker='o', label='P-value')
+    plt.plot(thresholds[:-1], p_values, marker='o', label='P-value')
     plt.axhline(y=0.05, color='r', linestyle='--', label='Significance Level (α = 0.05)')
-    plt.title('P-value vs. Variable Thresholds (Binned into 10 ranges)')
-    plt.xlabel('Variable Value Threshold')
+    plt.title('P-value vs. Variable Groups')
+    plt.xlabel('Variable Value Groups')
     plt.ylabel('P-value')
-    plt.xticks(bin_edges, rotation=45)
+    plt.xticks(thresholds, rotation=45)
     plt.ylim(0, 1)
     plt.grid(True)
     plt.legend()
