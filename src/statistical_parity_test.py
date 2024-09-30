@@ -12,7 +12,7 @@ def test_statistical_parity(variable_to_test:pd.Series, outcome:pd.Series) -> fl
     # Calculate the chi-squared statistic and p-value
     chi2, p, _, _ = chi2_contingency(contingency_table)
 
-    return p
+    return np.round(p, 5)
 
 def calculate_p_values(variable_to_test: pd.Series, outcome: pd.Series, thresholds: np.ndarray) -> np.ndarray:
     "Append p values based on threshold"
@@ -26,7 +26,7 @@ def calculate_p_values(variable_to_test: pd.Series, outcome: pd.Series, threshol
 
 def draw_fpdp(variable_to_test: pd.Series, outcome: pd.Series):
     """Draw fpdp graphs"""
-    thresholds = np.unique(outcome)
+    thresholds = np.linspace(0, 1, 10)
 
     # Calculate p-values for different thresholds
     p_values = calculate_p_values(variable_to_test, outcome, thresholds)
