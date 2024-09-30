@@ -1,48 +1,82 @@
-"""Module for testing statistical_parity"""
-
-from scipy.stats import chi2_contingency
-import pandas as pd
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+from scipy.stats import chi2_contingency
 
-def test_statistical_parity(variable_to_test:pd.Series, outcome:pd.Series) -> float:
-    """Run statistical parity test"""
-    contingency_table = pd.crosstab(variable_to_test, outcome)
+from typing import Tuple
 
-    # Calculate the chi-squared statistic and p-value
-    chi2, p, _, _ = chi2_contingency(contingency_table)
+def calculate_statistical_parity_p_value(group1_success, group1_total, group2_success, group2_total):
+    """Calculate the p-value for statistical parity between group1 and group2."""
+    # Create a contingency table
+    contingency_table = np.array([[group1_success, group1_total - group1_success],
+                                  [group2_success, group2_total - group2_success]])
+    
+    # Perform the chi-squared test
+    chi2, p_value, _, _ = chi2_contingency(contingency_table, correction=False)
+    
+    return p_value
 
-    return np.round(p, 5)
-
-def calculate_p_values(variable_to_test: pd.Series, outcome: pd.Series, thresholds: np.ndarray) -> np.ndarray:
-    "Append p values based on threshold"
+def test_statistical_parity(binned_variable: pd.Series, outcome: pd.Series) -> float:
+    """Test statistical parity by comparing each group to the rest."""
     p_values = []
-    for threshold in thresholds:
-        # Bin the outcomes based on the threshold
-        binned_outcome = (outcome >= threshold).astype(int)
-        p = test_statistical_parity(variable_to_test, binned_outcome)
-        p_values.append(p)
+
+    # Loop over each unique group in the binned variable
+    for group in binned_variable.unique():
+        group1_mask = (binned_variable == group)
+        group2_mask = ~group1_mask
+        
+        # Group 1: The group being tested
+        group1_total = group1_mask.sum()
+        group1_success = outcome[group1_mask].sum()
+
+        # Group 2: All other groups combined
+        group2_total = group2_mask.sum()
+        group2_success = outcome[group2_mask].sum()
+
+        if group1_total < 5 or group2_total < 5:
+            # If there are not enough observations, the result is unreliable
+            p_values.append(np.nan)
+        else:
+            # Calculate the p-value for statistical parity
+            p_value = calculate_statistical_parity_p_value(group1_success, group1_total, group2_success, group2_total)
+            p_values.append(p_value)
+
     return np.array(p_values)
+
+def calculate_p_values(variable_to_test: pd.Series, outcome: pd.Series) -> Tuple[np.ndarray, np.ndarray]:
+    """Calculate p-values for the binned or discrete values of the variable_to_test."""
+    unique_values = variable_to_test.nunique()
+
+    if unique_values > 10:
+        # Bin the variable into 10 groups if there are more than 10 unique values
+        binned_variable, bin_edges = pd.qcut(variable_to_test, 10, retbins=True, labels=False, duplicates='drop')
+        thresholds = bin_edges
+    else:
+        # If 10 or fewer unique values, use the unique values directly
+        binned_variable = variable_to_test
+        thresholds = sorted(variable_to_test.unique())
+
+    # Calculate p-values for each group
+    p_values = test_statistical_parity(binned_variable, outcome)
+
+    return p_values, thresholds
 
 def draw_fpdp(variable_to_test: pd.Series, outcome: pd.Series):
     """Draw fpdp graphs"""
-    thresholds = np.linspace(0, 1, 10)
+    thresholds = np.unique(outcome)
 
     # Calculate p-values for different thresholds
     p_values = calculate_p_values(variable_to_test, outcome, thresholds)
 
     # Plotting
     plt.figure(figsize=(10, 6))
-    plt.plot(thresholds, p_values, marker='o')
+    plt.plot(thresholds[:-1], p_values, marker='o', label='P-value')
     plt.axhline(y=0.05, color='r', linestyle='--', label='Significance Level (α = 0.05)')
-    plt.title('P-value vs. Outcome Thresholds')
-    plt.xlabel('Outcome Value Threshold')
+    plt.title('P-value vs. Variable Groups')
+    plt.xlabel('Variable Value Groups')
     plt.ylabel('P-value')
-    plt.xticks(thresholds)
+    plt.xticks(thresholds, rotation=45)
     plt.ylim(0, 1)
-    plt.grid()
+    plt.grid(True)
     plt.legend()
     plt.show()
-
-
-
