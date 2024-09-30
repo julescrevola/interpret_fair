@@ -51,7 +51,6 @@ def calculate_p_values(variable_to_test: pd.Series, outcome: pd.Series) -> Tuple
         # Bin the variable into 10 groups if there are more than 10 unique values
         binned_variable, bin_edges = pd.qcut(variable_to_test, 10, retbins=True, labels=False, duplicates='drop')
         thresholds = bin_edges
-        print(bin_edges)
     else:
         # If 10 or fewer unique values, use the unique values directly
         binned_variable = variable_to_test
@@ -70,7 +69,7 @@ def draw_fpdp(variable_to_test: pd.Series, outcome: pd.Series):
 
     # Plotting
     plt.figure(figsize=(10, 6))
-    plt.plot(thresholds[0:10], p_values, marker='o', label='P-value')
+    plt.plot(thresholds[:-1], p_values, marker='o', label='P-value')
     plt.axhline(y=0.05, color='r', linestyle='--', label='Significance Level (α = 0.05)')
     plt.title('P-value vs. Variable Groups')
     plt.xlabel('Variable Value Groups')
