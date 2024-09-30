@@ -1,4 +1,3 @@
-"""Module for testing statistical_parity"""
 from scipy.stats import chi2_contingency
 import pandas as pd
 import numpy as np
@@ -18,10 +17,10 @@ def test_statistical_parity(variable_to_test: pd.Series, outcome: pd.Series) -> 
 
     return p
 
-def calculate_p_values(variable_to_test: pd.Series, outcome: pd.Series, thresholds: np.ndarray) -> np.ndarray:
-    """Calculate p-values for different variable thresholds."""
+def calculate_p_values(variable_to_test: pd.Series, outcome: pd.Series, bin_edges: np.ndarray) -> np.ndarray:
+    """Calculate p-values for different variable thresholds based on bin ranges."""
     p_values = []
-    for threshold in thresholds:
+    for threshold in bin_edges:
         # Bin the variable_to_test based on the threshold
         binned_variable = (variable_to_test >= threshold).astype(int)
 
@@ -32,20 +31,20 @@ def calculate_p_values(variable_to_test: pd.Series, outcome: pd.Series, threshol
 
 def draw_fpdp(variable_to_test: pd.Series, outcome: pd.Series):
     """Draw FPDP graphs with the p-values of the statistical parity test."""
-    # Use unique sorted values of the variable_to_test for thresholds
-    thresholds = np.unique(variable_to_test)
+    # Bin the variable_to_test into 10 ranges (for continuous variables)
+    _, bin_edges = pd.qcut(variable_to_test, 10, retbins=True, duplicates='drop')
 
-    # Calculate p-values for each threshold on the variable_to_test
-    p_values = calculate_p_values(variable_to_test, outcome, thresholds)
+    # Calculate p-values for each threshold (bin edge) on the variable_to_test
+    p_values = calculate_p_values(variable_to_test, outcome, bin_edges)
 
     # Plotting
     plt.figure(figsize=(10, 6))
-    plt.plot(thresholds, p_values, marker='o', label='P-value')
+    plt.plot(bin_edges, p_values, marker='o', label='P-value')
     plt.axhline(y=0.05, color='r', linestyle='--', label='Significance Level (α = 0.05)')
-    plt.title('P-value vs. Variable Thresholds')
+    plt.title('P-value vs. Variable Thresholds (Binned into 10 ranges)')
     plt.xlabel('Variable Value Threshold')
     plt.ylabel('P-value')
-    plt.xticks(thresholds, rotation=45)
+    plt.xticks(bin_edges, rotation=45)
     plt.ylim(0, 1)
     plt.grid(True)
     plt.legend()
